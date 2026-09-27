@@ -60,11 +60,11 @@ const ROOMS={
  hall:{r:[0,10750,6000,13050],name:'Зал · ресепшн и ожидание',meta:'6,00 × 2,30 м · 13,80 м²'}};
 const WALLS=[
  [-250,-300,6300,0,H_LOW,[[700,2490,900,2400]]],
- [-250,13050,6300,13350,H_HALL,[[248,2640,150,2900],[3220,3920,150,2900],[3920,4920,0,2400],[4920,5614,150,2900]]],
+ [-250,13050,6300,13350,H_HALL,[[250,1900,900,2500],[1950,2950,0,2100],[3000,4150,900,2500],[4750,5100,900,2500],[5150,5900,900,2500]]],
  [-250,-300,0,10750,H_LOW,[]],
  [-250,10750,0,13350,H_HALL,[]],
  [6000,6650,6300,13350,H_HALL,[]],
- [6000,0,6250,6650,H_LOW,[[1720,2720,0,2100]]],
+ [6000,0,6250,6650,H_LOW,[[1400,2400,0,2100]]],
  [4170,0,4420,6650,H_LOW,[[1400,2300,0,2100],[4675,5675,0,2100]]],
  [0,6650,4420,6900,H_LOW,[]],
  [0,3200,4170,3450,H_LOW,[]],
@@ -82,12 +82,12 @@ const VIEWS=[
  {k:'cab3',n:'8 · Кабинет 3',room:'cab3',p:[620,1560,10300],t:[3700,1300,7200]}];
 
 // ---------- рендер, окружение, материалы ----------
-const scene=new T.Scene(); scene.background=new T.Color(0x0a1224);
+const scene=new T.Scene(); scene.background=new T.Color(0x070c18);
 const camera=new T.PerspectiveCamera(70,1,.04,180);
 const renderer=new T.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.outputEncoding=T.sRGBEncoding;
-renderer.toneMapping=T.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
+renderer.toneMapping=T.ACESFilmicToneMapping; renderer.toneMappingExposure=0.72;
 renderer.shadowMap.enabled=true; renderer.shadowMap.type=T.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
@@ -95,7 +95,7 @@ function cvs(w,h,draw){const c=document.createElement('canvas');c.width=w;c.heig
  const t=new T.CanvasTexture(c);t.encoding=T.sRGBEncoding;t.anisotropy=8;return t;}
 // окружение для мягких отражений
 const envTex=cvs(64,128,(g)=>{const lg=g.createLinearGradient(0,0,0,128);
- lg.addColorStop(0,'#eaf2ff');lg.addColorStop(.5,'#cfd8ea');lg.addColorStop(1,'#8d7f6c');
+ lg.addColorStop(0,'#b9c9e6');lg.addColorStop(.5,'#8e9ab2');lg.addColorStop(1,'#5b5144');
  g.fillStyle=lg;g.fillRect(0,0,64,128);});
 envTex.mapping=T.EquirectangularReflectionMapping;
 const pmrem=new T.PMREMGenerator(renderer); pmrem.compileEquirectangularShader();
@@ -113,9 +113,9 @@ const gradTex=cvs(8,256,(g)=>{const lg=g.createLinearGradient(0,0,0,256);
 
 const S=(o)=>new T.MeshStandardMaterial(o);
 const MAT={
- wall:S({color:0xf3f4f8,roughness:.94}),
+ wall:S({color:0xe4e7ee,roughness:.95}),
  floor:S({map:oakTex,roughness:.62,metalness:.02}),
- ceil:S({color:0xffffff,roughness:1}),
+ ceil:S({color:0xeef0f5,roughness:1}),
  accent:S({map:gradTex,roughness:.55,metalness:.12}),
  glass:S({color:0xdff0fb,roughness:.06,metalness:0,transparent:true,opacity:.24}),
  oak:S({color:0xc4915f,roughness:.6}),
@@ -171,6 +171,7 @@ function wall(x0,z0,x1,z1,h,ops){
 }
 WALLS.forEach(w=>wall(w[0],w[1],w[2],w[3],w[4],w[5]));
 box(-250,-300,6300,13350,-40,0,MAT.floor);
+box(4200,12980,4750,13060,0,H_HALL,MAT.wall); // колонна в фасаде
 const CEIL=[box(0,0,6000,10750,H_LOW,H_LOW+50,MAT.ceil),
             box(0,10750,6000,13050,H_HALL,H_HALL+50,MAT.ceil)];
 // акцентные стены
@@ -224,25 +225,35 @@ function plant(x,z,s){s=s||1; cyl(x,z,150*s,0,260*s,MAT.pot,18);
  sph(x,760*s,z,150*s,MAT.leaf);}
 function fixture(x,z,y,r){cyl(x,z,r||160,y-40,y,MAT.lamp,20);
  cyl(x,z,(r||160)+30,y,y+30,MAT.white,20);
- const p=new T.PointLight(0xfff0dc,.42,7,2); p.position.set(M(x),M(y-80),M(z)); G.add(p);}
+ const p=new T.PointLight(0xffe7c4,.30,6.5,2); p.position.set(M(x),M(y-80),M(z)); G.add(p);}
 function picture(x0,x1,z,y0,y1,col){box(x0,z,x1,z+25,y0,y1,S_({color:col}));
  box(x0-35,z,x1+35,z+32,y1,y1+35,MAT.white); box(x0-35,z,x1+35,z+32,y0-35,y0,MAT.white);}
 function doorLeaf(x0,z0,x1,z1){box(x0,z0,x1,z1,0,2100,MAT.white);
  cyl((x0+x1)/2,(z0+z1)/2,0,0,0,MAT.metal,4);}
 
 // ---------- зал ----------
-lockers(250,10820,2150,11250,1320);
-mirrorH(620,1720,10790,1420,2120);
-box(300,11520,1620,11960,0,120,MAT.oak); box(300,11520,1620,11960,120,430,MAT.oakL);
-sofa(2350,10850,3750,11650,'n');
-table(3080,12100,330,420);
-box(2350,12480,2650,12800,0,1200,MAT.white); cyl(2500,12640,120,1200,1320,MAT.metal,14);
+lockers(1750,10820,3300,11250,1320);
+mirrorH(1900,2900,10790,1420,2120);
+box(1780,11480,3100,11880,0,120,MAT.oak); box(1780,11480,3100,11880,120,430,MAT.oakL);
+sofa(250,11950,1850,12750,'s');
+table(2450,12350,320,420);
+box(3450,12450,3750,12780,0,1150,MAT.white); cyl(3600,12615,115,1150,1270,MAT.metal,14);
 // ресепшн: изогнутая стойка
-box(4950,11450,5820,12550,0,1080,MAT.white);
-box(4900,11400,5870,12600,1080,1140,MAT.oakL);
-cyl(4950,11450,480,0,1080,MAT.white,28); cyl(4950,11450,530,1080,1140,MAT.oakL,28);
-box(5000,11550,5780,12450,0,720,MAT.navy);
-box(5150,11700,5620,12300,1140,1160,MAT.dark);
+// стойка: клиентская часть, рабочая столешница ниже, тумбы, логотип
+box(4980,11400,5850,12600,0,1120,MAT.white);
+box(4930,11350,5900,12650,1120,1180,MAT.oakL);
+cyl(4980,11400,470,0,1120,MAT.white,30); cyl(4980,11400,520,1120,1180,MAT.oakL,30);
+cyl(4980,12600,470,0,1120,MAT.white,30); cyl(4980,12600,520,1120,1180,MAT.oakL,30);
+box(4960,11380,5000,12620,1120,1190,MAT.accent);        // подсветка торца
+box(5280,11480,5850,12520,0,740,MAT.oakL);              // рабочая столешница
+box(5330,11560,5820,11980,0,620,MAT.oak);               // тумба с ящиками
+for(let i=0;i<3;i++) cyl(5350,11770,28,180+i*180,210+i*180,MAT.metal,10);
+box(5420,12080,5800,12420,0,60,MAT.dark);               // монитор-подставка
+box(5480,12230,5760,12270,60,520,MAT.metal);
+box(5330,12120,5820,12180,520,880,MAT.dark);
+chair(5600,12280,Math.PI/2,MAT.navy);
+box(5952,11500,5972,12300,1750,2450,MAT.white);          // логотип-панель на стене
+box(5948,11700,5960,12100,1900,2300,MAT.accent);
 plant(4700,10980,1.05); plant(260,12820,.95); plant(5820,10950,.8);
 picture(700,1900,13020,1500,2300,0x2f57c9); picture(2100,2900,13020,1600,2250,0x49a884);
 [[1500,11400],[3400,11400],[5100,11400],[1500,12500],[3400,12500],[5100,12500]]
@@ -262,28 +273,40 @@ shelf(3400,3620,4120,4300,1500);
 box(3400,5600,4120,6400,0,760,MAT.oak);
 [[1300,4200],[2900,4200],[1300,5900],[2900,5900]].forEach(([x,z])=>fixture(x,z,2930,140));
 // ---------- кабинет 3 ----------
-cyl(2250,8650,1250,0,25,MAT.rug,48);
-(function(){const cx=2250,cz=8650,R=850;
+cyl(2500,8900,1150,0,25,MAT.rug,48);
+(function(){const cx=2500,cz=8900,R=800;
  for(let i=0;i<7;i++){const a=i/7*6.283; chair(cx+R*Math.cos(a),cz+R*Math.sin(a),-a+Math.PI/2);}})();
 shelf(250,9950,1700,10420,900); shelf(1900,9950,3350,10420,900);
-mirrorV(4140,7350,9650,900,2050,30);
+mirrorV(4140,8200,9900,900,2050,30);
+// ---- AR-песочница: ящик 1200 x 800 внутри, борт 300, песок 180
+(function(){const x0=200,z0=7000,x1=1440,z1=7840,t=20;
+ box(x0,z0,x1,z0+t,0,318,MAT.oak); box(x0,z1-t,x1,z1,0,318,MAT.oak);
+ box(x0,z0,x0+t,z1,0,318,MAT.oak); box(x1-t,z0,x1,z1,0,318,MAT.oak);
+ box(x0+t,z0+t,x1-t,z1-t,0,198,S_({color:0xe6d5b0,roughness:1}));   // песок
+ box(x0-40,z0-40,x1+40,z0-10,0,30,MAT.oakL);
+ // проектор на кронштейне и датчик
+ box(20,7300,60,7560,1900,2100,MAT.wall);
+ box(60,7360,520,7500,1950,2050,MAT.dark);
+ box(60,7380,140,7480,1960,2040,MAT.metal);
+ box(20,7150,50,7250,1380,1520,MAT.wall);
+ box(50,7170,300,7230,1400,1500,MAT.dark);})();
 picture(900,2100,6930,1800,2500,0xffffff);
 [[1200,7500],[3200,7500],[1200,9700],[3200,9700],[2250,8650]].forEach(([x,z])=>fixture(x,z,2930,150));
 // ---------- коридор и проход ----------
 box(4520,2600,4900,3620,0,120,MAT.oak); box(4520,2600,4900,3620,120,430,MAT.oakL);
 doorLeaf(3170,1400,4170,1440); doorLeaf(3170,4675,4170,4715);
-doorLeaf(6000,1720,6250,2720); doorLeaf(500,10750,540,11750);
+doorLeaf(6000,1400,6250,2400); doorLeaf(500,10750,540,11750);
 picture(4520,4520,700,1500,2200,0x8a6fd0);
 [[5210,900],[5210,2600],[5210,4300],[5210,6000],[5210,7600],[5210,9400]]
  .forEach(([x,z])=>fixture(x,z,2930,130));
 // ---------- свет ----------
-scene.add(new T.HemisphereLight(0xdce9ff,0x6b5a44,.48));
-const sun=new T.DirectionalLight(0xfff0d8,1.15);
+scene.add(new T.HemisphereLight(0xc9d9f5,0x53473a,.26));
+const sun=new T.DirectionalLight(0xffe9c9,.78);
 sun.position.set(M(3200),M(6500),M(21000)); sun.castShadow=true;
 sun.shadow.mapSize.set(1024,1024);
 const sc=sun.shadow.camera; sc.left=-6;sc.right=6;sc.top=10;sc.bottom=-10;sc.near=1;sc.far=34;
 sun.target.position.set(M(3000),0,M(11500)); scene.add(sun.target); scene.add(sun);
-const win=new T.DirectionalLight(0xe8f1ff,.35); win.position.set(M(1600),M(4200),M(-9000));
+const win=new T.DirectionalLight(0xdce9ff,.22); win.position.set(M(1600),M(4200),M(-9000));
 win.target.position.set(M(1600),0,M(1600)); scene.add(win.target); scene.add(win);
 
 // ---------- камера и управление ----------
